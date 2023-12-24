@@ -1,0 +1,76 @@
+.dropify-wrapper{
+    border-radius: 50%;
+    height: 100px;
+    width: 100px;
+    /*border: 1px solid white;*/
+}
+.div-img-profile{
+    height: 100px;
+    width: 100px
+}
+
+#img-profile{
+    /*padding-top: 40px;*/
+}
+
+#img-profile h6{
+    font-size: 14pt;
+}
+
+#card-profile{
+    border-radius: 5px;
+    margin-top: 20px
+}
+
+@media only screen and (min-width: 601px) {
+    .dropify-wrapper{
+        height: 150px;
+        width: 150px;
+    }
+    .div-img-profile{
+        height: 150px;
+        width: 150px
+    }
+    #img-profile{
+        padding-top: 0;
+    }
+    #img-profile h6{
+        font-size: 14pt;
+    }
+    #card-profile{
+        border-radius: 5px;
+        margin-top: 70px
+    }
+}
+
+@media only screen and (min-width: 993px) {
+    .dropify-wrapper{
+        height: 150px;
+        width: 150px;
+    }
+
+    .div-img-profile{
+        height: 150px;
+        width: 150px
+    }
+    #img-profile{
+        padding-top: 0;
+    }
+    #img-profile h6{
+        font-size: 28pt;
+    }
+    #card-profile{
+        border-radius: 5px;
+        margin-top: 70px
+    }
+
+}
+
+#img-account {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding-left: 0 !important;
+    border-radius: 50%;
+    border: none;
+}
