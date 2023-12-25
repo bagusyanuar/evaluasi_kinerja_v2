@@ -8,9 +8,11 @@ use App\Helper\CustomController;
 use App\Models\Package;
 use App\Models\ScoreSMKKV2;
 use App\Models\Stage;
+use App\Models\StorehouseImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 use Yajra\DataTables\DataTables;
 
 class SmkkV2Controller extends CustomController
@@ -92,13 +94,13 @@ class SmkkV2Controller extends CustomController
         try {
             $scoreValue = (int)$this->request->request->get('value');
             $sub_indicator_id = (int)$this->request->request->get('sub_indicator');
-            $scoreText = '-';
+            $scoreText = '';
             switch ($scoreValue) {
                 case 0:
-                    $scoreText = 'Ada';
+                    $scoreText = 'Tidak Ada';
                     break;
                 case 1:
-                    $scoreText = 'Tidak Ada';
+                    $scoreText = 'Ada';
                     break;
                 default:
                     break;
@@ -120,12 +122,102 @@ class SmkkV2Controller extends CustomController
                 ScoreSMKKV2::create($data_score);
             } else {
                 $data_score = [
+                    'evaluator_id' => \auth()->id(),
                     'score' => $scoreValue,
                     'score_text' => $scoreText,
                 ];
                 $score->update($data_score);
             }
             return response()->json('success', 200);
+        } catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function uploadScoreFile($id, $stage_id)
+    {
+        $sub_indicator_id = $this->request->request->get('sub-indicator-id-file');
+        try {
+            DB::beginTransaction();
+            $currentScore = ScoreSMKKV2::with([])->where('package_id', '=', $id)
+                ->where('stage_sub_indicator_id', '=', $sub_indicator_id)
+                ->first();
+            if ($this->request->hasFile('file')) {
+                $file = $this->request->file('file');
+                $extension = $file->getClientOriginalExtension();
+                $document = Uuid::uuid4()->toString() . '.' . $extension;
+                $storage_path = public_path('files_smkk');
+                $documentName = $storage_path . '/' . $document;
+                if (!$currentScore) {
+                    $data_score = [
+                        'package_id' => $id,
+                        'evaluator_id' => null,
+                        'stage_sub_indicator_id' => $sub_indicator_id,
+                        'score' => null,
+                        'score_text' => '',
+                        'note_ppk' => '',
+                        'note_balai' => '',
+                        'file' => '/files_smkk/' . $document
+                    ];
+                    ScoreSMKKV2::create($data_score);
+                } else {
+                    $dataDocument = [
+                        'file' => '/files_smkk/' . $document
+                    ];
+                    $currentScore->update($dataDocument);
+                }
+
+                $file->move($storage_path, $documentName);
+                DB::commit();
+                return response()->json('success', 200);
+            } else {
+                DB::rollBack();
+                return response()->json('no file attached', 403);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function setDescription($id, $stage_id)
+    {
+        if ($this->request->ajax() && $this->request->method() === 'POST') {
+            try {
+                $sub_indicator_id = $this->request->request->get('sub_indicator_id_description');
+                $currentScore = ScoreSMKKV2::with([])->where('package_id', '=', $id)
+                    ->where('stage_sub_indicator_id', '=', $sub_indicator_id)
+                    ->first();
+
+                if (!$currentScore) {
+                    return response()->json('Data Nilai Tidak Di Temukan...', 404);
+                }
+                $notePPK = $this->request->request->get('ppk_description');
+                $noteBalai = $this->request->request->get('balai_description');
+                $data_score = [
+                    'note_ppk' => $notePPK,
+                    'note_balai' => $noteBalai,
+                ];
+                $currentScore->update($data_score);
+                return response()->json('success', 200);
+            } catch (\Exception $e) {
+                return response()->json('internal server error', 500);
+            }
+        }
+        return $this->getDescription($id, $stage_id);
+    }
+
+    private function getDescription($id, $stage_id)
+    {
+        try {
+            $sub_indicator_id = $this->request->query->get('sub-indicator-id-description');
+            $currentScore = ScoreSMKKV2::with([])->where('package_id', '=', $id)
+                ->where('stage_sub_indicator_id', '=', $sub_indicator_id)
+                ->first();
+            return response()->json([
+                'message' => 'success',
+                'data' => $currentScore
+            ], 200);
         } catch (\Exception $e) {
             return response()->json('internal server error', 500);
         }

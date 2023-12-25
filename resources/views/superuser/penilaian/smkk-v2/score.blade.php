@@ -1,6 +1,9 @@
 @extends('superuser.base')
 
 @section('moreCss')
+    <link href="{{ asset('css/sweetalert2.css') }}" rel="stylesheet">
+    <script src="{{ asset('js/sweetalert2.js') }}"></script>
+    <link href="{{ asset('/css/dropzone.min.css') }}" rel="stylesheet"/>
     <style>
         .banner-information {
             height: 160px;
@@ -42,6 +45,22 @@
         body {
             background-color: #778797;
             font-family: "Segoe UI", sans-serif;
+        }
+
+        .lazy-backdrop {
+            position: fixed;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            cursor: pointer;
         }
 
         .card-panel {
@@ -106,10 +125,39 @@
             display: flex;
             align-items: start;
         }
+
+        .dz-error-message {
+            display: none !important;
+        }
+
+        .dropzone {
+            min-height: 150px;
+            border: 1px solid gray;
+            background: transparent;
+            padding: 20px 20px;
+            border-radius: 5px;
+        }
+
+        .dz-remove {
+            color: whitesmoke;
+            text-decoration: none;
+        }
+
+        .dz-remove:hover {
+            color: whitesmoke;
+            text-decoration: none;
+        }
     </style>
 @endsection
 
 @section('content')
+    <div class="lazy-backdrop" id="overlay-loading">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <div class="spinner-border text-light" role="status">
+            </div>
+            <p class="text-light">Sedang Melakukan Perubahan Data....</p>
+        </div>
+    </div>
     <section class="container-fluid p-lg-3 p-xl-3">
         <div class=" row">
             <div class="col-xl-12 ">
@@ -141,16 +189,99 @@
             <p class="fw-bold">Penilaian Tahapan : {{ $stage->name }}</p>
             <hr>
             <div id="panel-score">
-
             </div>
         </div>
     </section>
+    <div class="modal fade" id="modal-upload" tabindex="-1" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Unggah Dokumen</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post"
+                          enctype="multipart/form-data"
+                          id="form-upload">
+                        <input type="hidden" id="sub-indicator-id-file" name="sub-indicator-id-file">
+                        @csrf
+                        <div class="w-100 needsclick dropzone mb-3" id="document-dropzone"></div>
+                        <button type="submit" class="bt-primary" id="btn-save-file">Simpan</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-description" tabindex="-1" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Keterangan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" id="form-description">
+                        @csrf
+                        <input type="hidden" id="sub-indicator-id-description" name="sub-indicator-id-description">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="mb-0">
+                                    <label for="ppk-description" class="form-label">Keterangan PPK</label>
+                                    <textarea rows="3" class="form-control" id="ppk-description"
+                                              name="ppk-description" {{ auth()->user()->roles[0] === 'accessorppk' ? '' : 'disabled' }}></textarea>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-0">
+                                    <label for="balai-description" class="form-label">Keterangan Balai</label>
+                                    <textarea rows="3" class="form-control" id="balai-description"
+                                              name="balai-description" {{ auth()->user()->roles[0] === 'accessor' ? '' : 'disabled' }} ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="bt-primary" id="btn-save-description">Simpan</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
+    <script src="{{ asset('/js/dropzone.min.js') }}"></script>
     <script>
         var path = '/{{ request()->path() }}';
         var packageID = '{{ $package->id }}';
+        var uploadedDocumentMap = {};
+        var myDropzone;
+        var notePPK = '';
+        var noteBalai = '';
+
+        Dropzone.autoDiscover = false;
+        Dropzone.options.documentDropzone = {
+
+            success: function (file, response) {
+                $('#form').append('<input type="hidden" name="files[]" value="' + file.name + '">');
+                console.log(response);
+                uploadedDocumentMap[file.name] = response.name
+            },
+        };
+
+        function blockLoading(state) {
+            if (state) {
+                $('#overlay-loading').css('display', 'flex')
+            } else {
+                $('#overlay-loading').css('display', 'none')
+            }
+        }
 
         function createLoadingSetScore() {
             return '<div class="d-flex flex-column align-items-center justify-content-center" style="height: 400px">' +
@@ -169,6 +300,7 @@
                 '<p class="mb-0">Tunggu sebentar sedang mengambil data nilai...</p>' +
                 '</div>';
         }
+
         async function getSubStageHandler() {
             let el = $('#panel-score');
             el.empty();
@@ -180,6 +312,9 @@
                 let scores = response['scores'];
                 el.append(generateSubStageElement(sub_stages, scores));
                 setEventButton();
+                setEventUpload();
+                setEventDownload();
+                setEventDescription();
                 console.log(response);
             } catch (e) {
                 el.empty();
@@ -197,6 +332,104 @@
             })
         }
 
+        function setEventUpload() {
+            $('.btn-upload').on('click', function (e) {
+                e.preventDefault();
+                let subIndicatorID = this.dataset.sub;
+                $('#sub-indicator-id-file').val(subIndicatorID);
+                $('#modal-upload').modal('show');
+            })
+        }
+
+        function setEventDownload() {
+            $('.btn-download').on('click', function (e) {
+                e.preventDefault();
+                let asset = this.dataset.asset;
+                window.open(asset, '_blank')
+            })
+        }
+
+        function setEventDescription() {
+            $('.btn-description').on('click', function (e) {
+                e.preventDefault();
+                let subIndicatorID = this.dataset.sub;
+                $('#sub-indicator-id-description').val(subIndicatorID);
+                getDataDescription(subIndicatorID);
+            })
+        }
+
+        function setEventSaveDescription() {
+            $('#btn-save-description').on('click', function (e) {
+                e.preventDefault();
+                setDescriptionHandler();
+            })
+        }
+
+        async function getDataDescription(subIndicatorID) {
+            try {
+                let url = path + '/description?sub-indicator-id-description=' + subIndicatorID;
+                let response = await $.get(url);
+                let data = response['data'];
+                if (data !== null) {
+                    $('#balai-description').val(data['note_balai']);
+                    $('#ppk-description').val(data['note_ppk']);
+                } else {
+                    $('#balai-description').val('');
+                    $('#ppk-description').val('');
+                }
+                console.log(response);
+                $('#modal-description').modal('show');
+            } catch (e) {
+                Swal.fire({
+                    title: 'Ooops',
+                    text: 'Terjadi Kesalahan Saat Mendapatkan Data Keterangan...',
+                    icon: 'error',
+                    timer: 700
+                })
+            }
+        }
+
+        async function setDescriptionHandler() {
+            try {
+                let url = path + '/description';
+                blockLoading(true);
+                let response = await $.post(url, {
+                    _token: '{{csrf_token()}}',
+                    sub_indicator_id_description: $('#sub-indicator-id-description').val(),
+                    ppk_description: $('#ppk-description').val(),
+                    balai_description: $('#balai-description').val(),
+                });
+                $('#modal-description').modal('hide');
+                blockLoading(false);
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Merubah Nilai...',
+                    icon: 'success',
+                    timer: 700
+                });
+                await getSubStageHandler();
+                console.log(response);
+            } catch (e) {
+                blockLoading(false);
+                if (e.status === 404) {
+                    Swal.fire({
+                        title: 'Ooops',
+                        text: 'Nilai Belum Tersedia...',
+                        icon: 'error',
+                        timer: 700
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Ooops',
+                        text: 'Gagal Merubah Nilai...',
+                        icon: 'error',
+                        timer: 700
+                    });
+                }
+                console.log(e)
+            }
+        }
+
         async function setScoreHandler(subIndicatorID, score) {
             let el = $('#panel-score');
             el.empty();
@@ -208,10 +441,22 @@
                     value: score,
                 });
                 el.empty();
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Merubah Nilai...',
+                    icon: 'success',
+                    timer: 700
+                });
                 await getSubStageHandler();
                 console.log(response);
-            }catch (e) {
+            } catch (e) {
                 el.empty();
+                Swal.fire({
+                    title: 'Ooops',
+                    text: 'Gagal Merubah Nilai...',
+                    icon: 'error',
+                    timer: 700
+                });
                 console.log(e)
             }
         }
@@ -245,7 +490,7 @@
                 let elFile = '<div class="dropdown">' +
                     '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unggah</button>' +
                     '<div class="dropdown-menu">' +
-                    '<button class="dropdown-item">Upload</button>' +
+                    '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Upload</button>' +
                     '</div>' +
                     '</div>';
                 let elScore = '<div class="dropdown">' +
@@ -256,7 +501,7 @@
                     '</div>' +
                     '</div>';
 
-                let elDescription = '<button type="button" class="bt-primary-xsm">Lihat</button>';
+                let elDescription = '<button type="button" class="bt-primary-xsm btn-description" data-sub="' + v['id'] + '">Lihat</button>';
 
                 //TODO matching sub indicator with score
                 let score = scores.find((o) => o['stage_sub_indicator_id'] === v['id']);
@@ -266,8 +511,8 @@
                         elFile = '<div class="dropdown">' +
                             '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh / Ganti</button>' +
                             '<div class="dropdown-menu">' +
-                            '<button class="dropdown-item">Download</button>' +
-                            '<button class="dropdown-item">Ganti File</button>' +
+                            '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
+                            '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti File</button>' +
                             '</div>' +
                             '</div>';
                     }
@@ -325,8 +570,94 @@
             return result;
         }
 
+        function setUpDropzone() {
+            let url = path + '/file';
+            $("#document-dropzone").dropzone({
+                url: url,
+                maxFilesize: 5,
+                addRemoveLinks: true,
+                headers: {
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                },
+                autoProcessQueue: false,
+                paramName: "file",
+
+                init: function () {
+                    myDropzone = this;
+                    $('#btn-save-file').on('click', function (e) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Konfirmasi!",
+                            text: "Apakah anda yakin melampirkan dokumen?",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Ya',
+                            cancelButtonText: 'Batal',
+                        }).then((result) => {
+                            if (result.value) {
+                                blockLoading(true)
+                                if (myDropzone.files.length > 0) {
+                                    myDropzone.processQueue();
+                                } else {
+                                    blockLoading(false);
+                                    Swal.fire({
+                                        title: 'Ooops',
+                                        text: 'Harap Melampirkan Data Dokumen...',
+                                        icon: 'error',
+                                        timer: 700
+                                    }).then(() => {
+                                        // window.location.reload();
+                                    });
+                                }
+                            }
+                        });
+                    });
+                    this.on('sending', function (file, xhr, formData) {
+                        // Append all form inputs to the formData Dropzone will POST
+                        var data = $('#form-upload').serializeArray();
+                        $.each(data, function (key, el) {
+                            formData.append(el.name, el.value);
+                        });
+                    });
+
+                    this.on('success', function (file, response) {
+                        blockLoading(false);
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: 'Berhasil Melampirkan Gambar Bukti Transfer...',
+                            icon: 'success',
+                            timer: 700
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    });
+
+                    this.on('error', function (file, response) {
+                        blockLoading(false);
+                        Swal.fire({
+                            title: 'Ooops',
+                            text: 'Gagal Menambahkan Dokumen...',
+                            icon: 'error',
+                            timer: 700
+                        });
+                        console.log(response);
+                    });
+
+                    this.on('addedfile', function (file) {
+                        if (this.files.length > 1) {
+                            this.removeFile(this.files[0]);
+                        }
+                    });
+                },
+            });
+        }
+
         $(document).ready(function () {
             getSubStageHandler();
+            setUpDropzone();
+            setEventSaveDescription();
         })
     </script>
 @endsection

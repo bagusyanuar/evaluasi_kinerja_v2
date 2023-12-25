@@ -16,9 +16,9 @@ class CreateScoreSmkkv2 extends Migration
         Schema::create('score_smkkv2', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('package_id')->unsigned();
-            $table->bigInteger('evaluator_id')->unsigned();
+            $table->bigInteger('evaluator_id')->unsigned()->nullable();
             $table->bigInteger('stage_sub_indicator_id')->unsigned();
-            $table->smallInteger('score')->default(0);
+            $table->smallInteger('score')->nullable();
             $table->string('score_text');
             $table->text('file')->nullable();
             $table->text('note_ppk');
