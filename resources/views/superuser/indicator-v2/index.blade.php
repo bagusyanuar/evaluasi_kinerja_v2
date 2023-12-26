@@ -181,6 +181,7 @@
                 "fnDrawCallback": function (setting) {
                     eventDetail();
                     eventEdit();
+                    deleteEvent();
                 },
             });
         }
@@ -212,6 +213,53 @@
                 $('#editdata').modal('show');
             } catch (e) {
                 console.log(e);
+                Swal.fire({
+                    title: 'Error',
+                    text: e.responseJSON,
+                    icon: 'error',
+                    timer: 700
+                })
+            }
+        }
+
+        function deleteEvent() {
+            $('.btn-delete').on('click', function (e) {
+                e.preventDefault();
+                let id = this.dataset.id;
+                Swal.fire({
+                    title: "Konfirmasi!",
+                    text: "Apakah anda yakin menghapus data?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        destroy(id);
+                    }
+                });
+
+            })
+        }
+
+        async function destroy(id) {
+            let url = path + '/' + id + '/delete';
+            try {
+                await $.post(url, {
+                    _token: '{{csrf_token()}}',
+                });
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Menghapus Data...',
+                    icon: 'success',
+                    timer: 700
+                }).then((response) => {
+                    window.location.reload();
+                })
+            } catch (e) {
+                console.log(e)
                 Swal.fire({
                     title: 'Error',
                     text: e.responseJSON,

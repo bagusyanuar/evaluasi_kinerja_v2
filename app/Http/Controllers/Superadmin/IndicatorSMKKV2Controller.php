@@ -132,4 +132,204 @@ class IndicatorSMKKV2Controller extends Controller
             return redirect()->back()->with('failed', 'internal server error');
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            $stage = Stage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$stage) {
+                return response()->json('data not found', 404);
+            }
+            $stage->delete();
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function get_sub_stage($id)
+    {
+        if (request()->method() === 'POST' && request()->ajax()) {
+            return $this->patch_sub_stage($id);
+        }
+        try {
+            $sub_stage = SubStage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_stage) {
+                return response()->json('data not found', 404);
+            }
+            return response()->json([
+                'data' => $sub_stage,
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    private function patch_sub_stage($id)
+    {
+        try {
+            $sub_stage = SubStage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_stage) {
+                return response()->json('data not found', 404);
+            }
+            $name = request()->request->get('name');
+            $sub_stage->update([
+                'name' => $name
+            ]);
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function destroy_sub_stage($id)
+    {
+        try {
+            $sub_stage = SubStage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_stage) {
+                return response()->json('data not found', 404);
+            }
+            $sub_stage->delete();
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function get_indicator($id)
+    {
+        if (request()->method() === 'POST' && request()->ajax()) {
+            return $this->patch_indicator($id);
+        }
+        try {
+            $indicator = StageIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$indicator) {
+                return response()->json('data not found', 404);
+            }
+            return response()->json([
+                'data' => $indicator,
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    private function patch_indicator($id)
+    {
+        try {
+            $indicator = StageIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$indicator) {
+                return response()->json('data not found', 404);
+            }
+            $name = request()->request->get('name');
+            $indicator->update([
+                'name' => $name
+            ]);
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function destroy_indicator($id)
+    {
+        try {
+            $indicator = StageIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$indicator) {
+                return response()->json('data not found', 404);
+            }
+            $indicator->delete();
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function get_sub_indicator($id)
+    {
+        if (request()->method() === 'POST' && request()->ajax()) {
+            return $this->patch_sub_indicator($id);
+        }
+        try {
+            $sub_indicator = StageSubIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_indicator) {
+                return response()->json('data not found', 404);
+            }
+            return response()->json([
+                'data' => $sub_indicator,
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    private function patch_sub_indicator($id)
+    {
+        try {
+            $sub_indicator = StageSubIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_indicator) {
+                return response()->json('data not found', 404);
+            }
+            $name = request()->request->get('name');
+            $sub_indicator->update([
+               'name' => $name
+            ]);
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function destroy_sub_indicator($id)
+    {
+        try {
+            $sub_indicator = StageSubIndicator::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_indicator) {
+                return response()->json('data not found', 404);
+            }
+            $sub_indicator->delete();
+            return response()->json([
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+
 }

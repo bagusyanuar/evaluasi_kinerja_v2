@@ -139,6 +139,9 @@
 						<a href="/smkk" id="smkk" class="nav_link"> <i
                                 class='bx bxs-bar-chart-square'></i>
                             <span class="nav_name">Penilaian SMKK</span> </a>
+                       <a href="{{ route('score.smkk-v2') }}" id="smkkv2" class="nav_link"> <i
+                                class='bx bxs-bar-chart-square'></i>
+                            <span class="nav_name">Penilaian SMKK V.2</span> </a>
 
                         {{-- <a href="/hist" id="alert" class="nav_link"> <i class='bx bxs-bar-chart-square'></i>
                     <span class="nav_name">Alert</span> </a> --}}

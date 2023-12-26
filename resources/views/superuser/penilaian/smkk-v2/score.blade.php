@@ -264,6 +264,7 @@
         var myDropzone;
         var notePPK = '';
         var noteBalai = '';
+        var uRoles = '{{ auth()->user()->roles[0] }}';
 
         Dropzone.autoDiscover = false;
         Dropzone.options.documentDropzone = {
@@ -487,14 +488,9 @@
             let tableBody = '';
             $.each(data, function (k, v) {
                 //TODO set default action
-                let elFile = '<div class="dropdown">' +
-                    '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unggah</button>' +
-                    '<div class="dropdown-menu">' +
-                    '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Upload</button>' +
-                    '</div>' +
-                    '</div>';
-                let elScore = '<div class="dropdown">' +
-                    '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Beri Nilai</button>' +
+                let elFile = '-';
+                let elScore = '<div class="">' +
+                    '<button class="bt-primary-xsm btn-file" data-bs-toggle="" aria-expanded="false" data-sub="' + v['id'] + '">Beri Nilai</button>' +
                     '<div class="dropdown-menu">' +
                     '<button class="dropdown-item btn-set-score" data-score="1" data-sub="' + v['id'] + '">Ada</button>' +
                     '<button class="dropdown-item btn-set-score" data-score="0" data-sub="' + v['id'] + '">Tidak</button>' +
@@ -503,18 +499,38 @@
 
                 let elDescription = '<button type="button" class="bt-primary-xsm btn-description" data-sub="' + v['id'] + '">Lihat</button>';
 
+                if (uRoles === 'accessorppk') {
+                    elFile = '<div class="dropdown">' +
+                        '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unggah</button>' +
+                        '<div class="dropdown-menu">' +
+                        '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Upload</button>' +
+                        '</div>' +
+                        '</div>';
+                }
                 //TODO matching sub indicator with score
                 let score = scores.find((o) => o['stage_sub_indicator_id'] === v['id']);
                 console.log(score);
                 if (score !== undefined) {
                     if (score['file'] !== null) {
-                        elFile = '<div class="dropdown">' +
-                            '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh / Ganti</button>' +
-                            '<div class="dropdown-menu">' +
-                            '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
-                            '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti File</button>' +
-                            '</div>' +
-                            '</div>';
+                        if (uRoles === 'accessor') {
+                            elFile = '<div class="dropdown">' +
+                                '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh</button>' +
+                                '<div class="dropdown-menu">' +
+                                '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
+                                '</div>' +
+                                '</div>';
+                        }
+
+                        if (uRoles === 'accessorppk') {
+                            elFile = '<div class="dropdown">' +
+                                '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh / Ganti</button>' +
+                                '<div class="dropdown-menu">' +
+                                '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
+                                '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti File</button>' +
+                                '</div>' +
+                                '</div>';
+                        }
+
                     }
                     let myScore = score['score'];
                     let classButtonScore = 'bt-primary-xsm';
@@ -531,13 +547,23 @@
                         default:
                             break;
                     }
-                    elScore = '<div class="dropdown">' +
-                        '<button class="' + classButtonScore + ' btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">' + scoreText + '</button>' +
-                        '<div class="dropdown-menu">' +
-                        '<button class="dropdown-item btn-set-score" data-score="1" data-sub="' + v['id'] + '">Ada</button>' +
-                        '<button class="dropdown-item btn-set-score" data-score="0" data-sub="' + v['id'] + '">Tidak</button>' +
-                        '</div>' +
-                        '</div>';
+
+                    if (score['file'] !== null && uRoles === 'accessor') {
+                        elScore = '<div class="dropdown">' +
+                            '<button class="' + classButtonScore + ' btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">' + scoreText + '</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<button class="dropdown-item btn-set-score" data-score="1" data-sub="' + v['id'] + '">Ada</button>' +
+                            '<button class="dropdown-item btn-set-score" data-score="0" data-sub="' + v['id'] + '">Tidak</button>' +
+                            '</div>' +
+                            '</div>';
+                    }
+
+                    if (score['file'] !== null && uRoles !== 'accessor') {
+                        elScore = '<div class="">' +
+                            '<button class="' + classButtonScore + ' btn-file" data-bs-toggle="" aria-expanded="false" data-sub="' + v['id'] + '">' + scoreText + '</button>' +
+                            '</div>';
+                    }
+
                 }
                 tableBody += '<tr>' +
                     '<td class="text-center">' + (k + 1) + '</td>' +

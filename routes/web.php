@@ -104,8 +104,15 @@ Route::prefix('/')->middleware('auth')->group(
                 Route::match(['post', 'get'], '/{id}/detail', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'detail'])->name('indicator.smkk.v2.detail');
                 Route::get( '/{id}/edit', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'edit'])->name('indicator.smkk.v2.edit');
                 Route::post( '/patch', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'patch'])->name('indicator.smkk.v2.patch');
+                Route::post( '/{id}/delete', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'destroy'])->name('indicator.smkk.v2.destroy');
                 Route::post('/indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'add_indicator'])->name('indicator.smkk.v2.indicator');
                 Route::post('/sub-indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'sub_indicator'])->name('indicator.smkk.v2.sub-indicator');
+                Route::match(['post', 'get'],'/sub-stage/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_sub_stage'])->name('indicator.smkk.v2.sub-stage.detail');
+                Route::match(['post', 'get'],'/indicators/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_indicator'])->name('indicator.smkk.v2.indicator.detail');
+                Route::match(['post', 'get'],'/sub-indicators/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_sub_indicator'])->name('indicator.smkk.v2.sub-indicator.detail');
+                Route::post('/sub-stage/{id}/delete', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'destroy_sub_stage'])->name('indicator.smkk.v2.sub-stage.destroy');
+                Route::post('/indicators/{id}/delete', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'destroy_indicator'])->name('indicator.smkk.v2.indicator.destroy');
+                Route::post('/sub-indicators/{id}/delete', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'destroy_sub_indicator'])->name('indicator.smkk.v2.sub-indicator.destroy');
             }
         );
 
