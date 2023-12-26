@@ -3,14 +3,14 @@
 @section('content')
     @if (\Illuminate\Support\Facades\Session::has('failed'))
         <script>
-            Swal.fire("Ooops", 'internal server error...', "error")
+            Swal.fire("Ooops", '{{ Illuminate\Support\Facades\Session::get('failed') }}', "error")
         </script>
     @endif
     @if (\Illuminate\Support\Facades\Session::has('success'))
         <script>
             Swal.fire({
                 title: 'Success',
-                text: 'Berhasil Menambahkan Data...',
+                text: '{{ Illuminate\Support\Facades\Session::get('success') }}',
                 icon: 'success',
                 timer: 700
             })
@@ -88,6 +88,29 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="editdata" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel"><span id="title"></span> Data Tahapan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-data-edit" method="post" action="{{route('indicator.smkk.v2.patch')}}">
+                        @csrf
+                        <input type="hidden" id="id-edit" name="id-edit">
+                        <div class="mb-3">
+                            <label for="name-edit" class="form-label">Nama Tahapan</label>
+                            <input type="text" class="form-control" id="name-edit" name="name-edit" required>
+                        </div>
+                        <button type="submit" class="bt-primary" id="btn-save-edit">Simpan</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('moreCss')
@@ -141,13 +164,11 @@
                     {
                         data: null,
                         render: function (data) {
-                            let urlEdit = path + '/' + data['id'] + '/edit';
-                            return '<a href="#" class="btn-detail me-2 btn-table-action" data-id="' +
+                            return '<a href="#" class="btn-detail me-2 btn-table-action bt-primary-xsm" data-id="' +
                                 data['id'] + '">Detail</a>' +
-                                '<a href="' + urlEdit +
-                                '" class="btn-edit me-2 btn-table-action" data-id="' + data['id'] +
+                                '<a href="#" class="btn-edit me-2 btn-table-action bt-success-xsm" data-id="' + data['id'] +
                                 '">Edit</a>' +
-                                '<a href="#" class="btn-delete btn-table-action" data-id="' + data[
+                                '<a href="#" class="btn-delete btn-table-action bt-danger-xsm" data-id="' + data[
                                     'id'] +
                                 '">Delete</a>';
                         },
@@ -159,6 +180,7 @@
                 paging: false,
                 "fnDrawCallback": function (setting) {
                     eventDetail();
+                    eventEdit();
                 },
             });
         }
@@ -169,6 +191,34 @@
                 let id = this.dataset.id;
                 window.location.href = path + '/' + id + '/detail';
             });
+        }
+
+        function eventEdit() {
+            $('.btn-edit').on('click', function (e) {
+                e.preventDefault();
+                let id = this.dataset.id;
+                editHandler(id)
+            });
+        }
+
+        async function editHandler(id) {
+            try {
+                let url = path + '/' + id + '/edit';
+                let response = await $.get(url);
+                let data = response['data'];
+                console.log(response);
+                $('#id-edit').val(data['id']);
+                $('#name-edit').val(data['name']);
+                $('#editdata').modal('show');
+            } catch (e) {
+                console.log(e);
+                Swal.fire({
+                    title: 'Error',
+                    text: e.responseJSON,
+                    icon: 'error',
+                    timer: 700
+                })
+            }
         }
 
         $(document).ready(function () {
@@ -191,6 +241,24 @@
                 }).then((result) => {
                     if (result.value) {
                         $('#form-data').submit()
+                    }
+                });
+            });
+
+            $('#btn-save-edit').on('click', function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: "Konfirmasi!",
+                    text: "Apakah anda yakin merubah data?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        $('#form-data-edit').submit()
                     }
                 });
             });

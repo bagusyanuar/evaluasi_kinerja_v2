@@ -89,4 +89,47 @@ class IndicatorSMKKV2Controller extends Controller
             return redirect()->back()->with('failed', 'internal server error');
         }
     }
+
+    public function edit($id)
+    {
+        if (request()->method() === 'POST') {
+            return $this->patchAction();
+        }
+        try {
+            $stage = Stage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$stage) {
+                return response()->json('data not found', 404);
+            }
+            return response()->json([
+                'data' => $stage,
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function patch()
+    {
+        try {
+            $id = request()->request->get('id-edit');
+            $name = request()->request->get('name-edit');
+            $stage = Stage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$stage) {
+                return redirect()->back()->with('failed', 'data not found');
+            }
+            $data_request = [
+                'name' => $name,
+                'index' => 1
+            ];
+            $stage->update($data_request);
+            return redirect()->back()->with('success', 'Berhasil Merubah Data Indikator....');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('failed', 'internal server error');
+        }
+    }
 }

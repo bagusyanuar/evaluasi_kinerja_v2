@@ -102,6 +102,8 @@ Route::prefix('/')->middleware('auth')->group(
             function () {
                 Route::match(['post', 'get'], '/', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'index'])->name('indicator.smkk.v2');
                 Route::match(['post', 'get'], '/{id}/detail', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'detail'])->name('indicator.smkk.v2.detail');
+                Route::get( '/{id}/edit', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'edit'])->name('indicator.smkk.v2.edit');
+                Route::post( '/patch', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'patch'])->name('indicator.smkk.v2.patch');
                 Route::post('/indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'add_indicator'])->name('indicator.smkk.v2.indicator');
                 Route::post('/sub-indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'sub_indicator'])->name('indicator.smkk.v2.sub-indicator');
             }
