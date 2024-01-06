@@ -5,20 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ScoreSMKKV2 extends Model
+class ScoreSmkkv2Revision extends Model
 {
-    use HasFactory;
-
-    protected $table = 'score_smkkv2';
+    protected $table = 'score_smkkv2_revisions';
 
     protected $fillable = [
+        'score_smkkv2_id',
         'package_id',
-        'evaluator_id',
         'stage_sub_indicator_id',
-        'score',
-        'score_text',
-        'note_ppk',
-        'note_balai',
+        'name',
         'file'
     ];
 
@@ -27,18 +22,13 @@ class ScoreSMKKV2 extends Model
         return $this->belongsTo(Package::class, 'package_id');
     }
 
-    public function evaluator()
+    public function score()
     {
-        return $this->belongsTo(User::class, 'evaluator_id');
+        return $this->belongsTo(ScoreSMKKV2::class, 'score_smkkv2_id');
     }
 
     public function stage_sub_indicator()
     {
         return $this->belongsTo(StageSubIndicator::class, 'stage_sub_indicator_id');
-    }
-
-    public function revisions()
-    {
-        return $this->hasMany(ScoreSmkkv2Revision::class, 'score_smkkv2_id');
     }
 }

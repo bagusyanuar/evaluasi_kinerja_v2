@@ -652,7 +652,7 @@
                         blockLoading(false);
                         Swal.fire({
                             title: 'Berhasil',
-                            text: 'Berhasil Melampirkan Gambar Bukti Transfer...',
+                            text: 'Berhasil Melampirkan Dokumen...',
                             icon: 'success',
                             timer: 700
                         }).then(() => {

@@ -2,6 +2,7 @@
 
 @section('moreCss')
     {{-- <link rel="stylesheet" href="{{ asset('css/tab.css') }}" type="text/css"> --}}
+
 @endsection
 
 @section('title')
@@ -15,6 +16,7 @@
                 <div class="header-table">
                     <p class="title-table fw-bold t-primary">Data Paket Kontruksi</p>
                 </div>
+
                 <table id="table" class="table table-striped" style="width:100%">
                 </table>
             </div>
@@ -23,6 +25,8 @@
 @endsection
 
 @section('script')
+
+
     <script>
         var table;
         let tahun = $('#year-list').val();

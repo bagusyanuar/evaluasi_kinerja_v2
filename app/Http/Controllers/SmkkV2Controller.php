@@ -53,6 +53,9 @@ class SmkkV2Controller extends CustomController
 
     public function package_page($id)
     {
+        if ($this->request->method() === 'POST' && $this->request->ajax()) {
+            return $this->setScore($id);
+        }
         $data = Package::with(['vendor.vendor', 'ppk'])->where('id', $id)->firstOrFail();
         $stages = Stage::with([])->get();
         return view('superuser.penilaian.smkk-v2.package')->with([
@@ -72,7 +75,7 @@ class SmkkV2Controller extends CustomController
             }
             try {
                 $sub_stages = $stage->sub_stages;
-                $scores = ScoreSMKKV2::with([])
+                $scores = ScoreSMKKV2::with(['revisions'])
                     ->where('package_id', '=', $id)
                     ->get();
                 return response()->json([
@@ -134,7 +137,7 @@ class SmkkV2Controller extends CustomController
         }
     }
 
-    public function uploadScoreFile($id, $stage_id)
+    public function uploadScoreFile($id)
     {
         $sub_indicator_id = $this->request->request->get('sub-indicator-id-file');
         try {
