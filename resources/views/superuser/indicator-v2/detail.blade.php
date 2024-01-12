@@ -39,11 +39,26 @@
         @forelse($stage->sub_stages as $sub_stage)
             <div class="table-container mb-3">
                 <div class="header-table align-items-center">
-                    <p class="title-table fw-bold t-primary mb-0">{{ $sub_stage->name }}</p>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center">
+                            <p class="title-table fw-bold t-primary mb-0 me-2">{{ $sub_stage->name }} </p>
+                            <a href="#" data-sub="{{ $sub_stage->id }}" class="btn-role-lock" style="color: white; border: solid 1px white; border-radius: 5px; padding: 2px 3px"><i class='bx bx-key'></i></a>
+                        </div>
+                        @if($sub_stage->roles !== null && $sub_stage->roles !== '')
+                            <p class="fst-italic" style="font-size: 12px;">
+                                {!! '(' !!}@foreach($sub_stage->roles as $vRoles)
+                                    @if($loop->first && count($sub_stage->roles) > 1)
+                                        {{ $vRoles }},
+                                    @else
+                                        {{ $vRoles }}
+                                    @endif
+                                @endforeach{!! ')' !!}
+                            </p>
+                        @endif
+                    </div>
                     @if(count($sub_stage->indicators) > 0)
                         <div class="d-flex align-items-center">
-                            <a class="bt-success-sm addIndicators" data-sub="{{ $sub_stage->id }}"><i
-                                    class='bx bx-plus'></i>
+                            <a class="bt-success-sm addIndicators" data-sub="{{ $sub_stage->id }}">
                                 Tambah Indikator
                             </a>
                             <a href="#" class="bt-primary-sm btn-edit-sub-stage ms-2" data-sub="{{ $sub_stage->id }}">
@@ -273,6 +288,35 @@
                                    name="name-sub-indicator-edit" required>
                         </div>
                         <a href="#" class="bt-primary" id="btn-patch-sub-indicator">Simpan</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-role" tabindex="-1" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Role Sub Tahapan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-data-sub-stage-role" method="post">
+                        @csrf
+                        <input type="hidden" name="sub-stage-id-role" value="" id="sub-stage-id-role">
+                        <div class="form-group w-100 mb-3">
+                            <label for="role" class="form-label">Role Akses</label>
+                            <select class="select2 form-control" name="role" id="role"
+                                    style="width: 100%;" multiple>
+                                <option value="accessorppk">Assessor PPK</option>
+                                <option value="accessor">Assessor</option>
+                                <option value="accessortahapan">Assessor Tahapan</option>
+                            </select>
+                        </div>
+                        <a href="#" class="bt-primary" id="btn-patch-sub-stage-role">Simpan</a>
                     </form>
                 </div>
             </div>
@@ -709,7 +753,18 @@
             }
         }
 
+        function eventSetRole() {
+            $('.btn-role-lock').on('click', function (e) {
+                e.preventDefault();
+                let sub = this.dataset.sub;
+                $('#sub-stage-id-role').val(sub);
+                $('#modal-role').modal('show');
+            });
+        }
         $(document).ready(function () {
+            $('#role').select2({
+                width: 'resolve',
+            });
             $('.addDataStage').on('click', function (e) {
                 e.preventDefault();
                 $('#tambahdatasubtahapan').modal('show');
@@ -792,6 +847,7 @@
             eventEditSubIndicator();
             eventPatchSubIndicator();
             eventDeleteSubIndicator();
+            eventSetRole();
         });
     </script>
 @endsection

@@ -12,7 +12,12 @@ class SubStage extends Model
     protected $fillable = [
         'stage_id',
         'name',
-        'index'
+        'index',
+        'roles'
+    ];
+
+    protected $casts = [
+        'roles'             => 'array',
     ];
 
     public function stage()
