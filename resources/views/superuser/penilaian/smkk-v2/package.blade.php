@@ -297,6 +297,30 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modal-revision" tabindex="-1" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Unggah Dokumen Revisi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post"
+                          enctype="multipart/form-data"
+                          id="form-upload-revision">
+                        <input type="hidden" id="id-score" name="id-score">
+                        @csrf
+                        <div class="w-100 needsclick dropzone mb-3" id="document-dropzone-revision"></div>
+                        <button type="submit" class="bt-primary" id="btn-save-file-revision">Simpan</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -305,13 +329,22 @@
     <script>
         var path = '/{{ request()->path() }}';
         var uploadedDocumentMap = {};
-        var myDropzone;
+        var myDropzone, myDropzoneRevision;
         var notePPK = '';
         var noteBalai = '';
         var uRoles = '{{ auth()->user()->roles[0] }}';
 
         Dropzone.autoDiscover = false;
         Dropzone.options.documentDropzone = {
+
+            success: function (file, response) {
+                $('#form').append('<input type="hidden" name="files[]" value="' + file.name + '">');
+                console.log(response);
+                uploadedDocumentMap[file.name] = response.name
+            },
+        };
+
+        Dropzone.options.documentDropzoneRevision = {
 
             success: function (file, response) {
                 $('#form').append('<input type="hidden" name="files[]" value="' + file.name + '">');
@@ -342,6 +375,8 @@
                 el.append(generateSubStageElement(sub_stages, scores));
                 setEventButton();
                 setEventUpload();
+                setEventUploadRevision();
+                setEventDownload();
                 console.log(response);
             } catch (e) {
                 console.log(e)
@@ -390,7 +425,7 @@
                 let elDescription = '<button type="button" class="bt-primary-xsm btn-description" data-sub="' + v['id'] + '">Lihat</button>';
 
                 if (uRoles === 'accessorppk') {
-                    elFile = '<div class="dropdown">' +
+                    elAction = '<div class="dropdown">' +
                         '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unggah</button>' +
                         '<div class="dropdown-menu">' +
                         '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Upload</button>' +
@@ -402,25 +437,48 @@
                 console.log(score);
                 if (score !== undefined) {
                     if (score['file'] !== null) {
-                        if (uRoles === 'accessor') {
+                        // if (uRoles === 'accessor') {
+                        elFile = '<div class="dropdown">' +
+                            '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh</button>' +
+                            '<div class="dropdown-menu">' +
+                            '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">File Utama</button>' +
+                            '</div>' +
+                            '</div>';
+
+                        //check if has revision
+                        //check if has revision
+                        if (score['revisions'].length > 0) {
+                            let elRev = '';
+                            $.each(score['revisions'], function (kRev, vRev) {
+                                elRev += '<button class="dropdown-item btn-download" data-asset="' + vRev['file'] + '">'+vRev['name']+'</button>'
+                            });
                             elFile = '<div class="dropdown">' +
                                 '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh</button>' +
                                 '<div class="dropdown-menu">' +
-                                '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
+                                '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">File Utama</button>' + elRev +
                                 '</div>' +
                                 '</div>';
                         }
+                        // }
 
                         if (uRoles === 'accessorppk') {
-                            elFile = '<div class="dropdown">' +
-                                '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh / Ganti</button>' +
+                            elAction = '<div class="dropdown">' +
+                                '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Revisi</button>' +
                                 '<div class="dropdown-menu">' +
-                                '<button class="dropdown-item btn-download" data-asset="' + score['file'] + '">Download</button>' +
-                                '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti File</button>' +
+                                // '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti</button>' +
+                                '<button class="dropdown-item btn-revision" data-score="' + score['id'] + '">Tambah Revisi</button>' +
                                 '</div>' +
                                 '</div>';
+                            //check if has revision
+                            if (score['revisions'].length > 0) {
+                                elAction = '<div class="dropdown">' +
+                                    '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Revisi</button>' +
+                                    '<div class="dropdown-menu">' +
+                                    '<button class="dropdown-item btn-revision" data-score="' + score['id'] + '">Tambah Revisi</button>' +
+                                    '</div>' +
+                                    '</div>'
+                            }
                         }
-
                     }
                     let myScore = score['score'];
                     let classButtonScore = 'bt-primary-xsm';
@@ -523,6 +581,23 @@
             })
         }
 
+        function setEventDownload() {
+            $('.btn-download').on('click', function (e) {
+                e.preventDefault();
+                let asset = this.dataset.asset;
+                window.open(asset, '_blank')
+            })
+        }
+
+        function setEventUploadRevision() {
+            $('.btn-revision').on('click', function (e) {
+                e.preventDefault();
+                let scoreID = this.dataset.score;
+                $('#id-score').val(scoreID);
+                $('#modal-revision').modal('show');
+            })
+        }
+
         async function setScoreHandler(subIndicatorID, score) {
             let el = $('#pills-content');
             el.empty();
@@ -622,7 +697,7 @@
                         $('#modal-upload').modal('hide');
                         Swal.fire({
                             title: 'Berhasil',
-                            text: 'Berhasil Melampirkan Gambar Bukti Transfer...',
+                            text: 'Berhasil Melampirkan File...',
                             icon: 'success',
                             timer: 700
                         }).then(() => {
@@ -650,15 +725,103 @@
             });
         }
 
+        function setUpDropzoneRevision() {
+            let url = path + '/revision';
+            $("#document-dropzone-revision").dropzone({
+                url: url,
+                maxFilesize: 5,
+                addRemoveLinks: true,
+                headers: {
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                },
+                autoProcessQueue: false,
+                paramName: "file",
+
+                init: function () {
+                    myDropzoneRevision = this;
+                    $('#btn-save-file-revision').on('click', function (e) {
+                        console.log(myDropzoneRevision);
+                        e.preventDefault();
+                        Swal.fire({
+                            title: "Konfirmasi!",
+                            text: "Apakah anda yakin melampirkan dokumen?",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Ya',
+                            cancelButtonText: 'Batal',
+                        }).then((result) => {
+                            if (result.value) {
+                                blockLoading(true)
+                                if (myDropzoneRevision.files.length > 0) {
+                                    myDropzoneRevision.processQueue();
+                                } else {
+                                    blockLoading(false);
+                                    Swal.fire({
+                                        title: 'Ooops',
+                                        text: 'Harap Melampirkan Data Dokumen...',
+                                        icon: 'error',
+                                        timer: 700
+                                    }).then(() => {
+                                        // window.location.reload();
+                                    });
+                                }
+                            }
+                        });
+                    });
+                    this.on('sending', function (file, xhr, formData) {
+                        // Append all form inputs to the formData Dropzone will POST
+                        var data = $('#form-upload-revision').serializeArray();
+                        $.each(data, function (key, el) {
+                            formData.append(el.name, el.value);
+                        });
+                    });
+
+                    this.on('success', function (file, response) {
+                        blockLoading(false);
+                        $('#id-score').val('');
+                        $('#modal-revision').modal('hide');
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: 'Berhasil Melampirkan File Revisi...',
+                            icon: 'success',
+                            timer: 700
+                        }).then(() => {
+                            initTab();
+                        });
+                    });
+
+                    this.on('error', function (file, response) {
+                        blockLoading(false);
+                        Swal.fire({
+                            title: 'Ooops',
+                            text: 'Gagal Menambahkan Dokumen...',
+                            icon: 'error',
+                            timer: 700
+                        });
+                    });
+
+                    this.on('addedfile', function (file) {
+                        if (this.files.length > 1) {
+                            this.removeFile(this.files[0]);
+                        }
+                    });
+                },
+            });
+        }
+
         function initTab() {
-            let activeTab = $('.my-custom-nav .nav-link.active')[0];;
+            let activeTab = $('.my-custom-nav .nav-link.active')[0];
             let id = activeTab.dataset.id;
             getSubStageHandler(id);
         }
+
         $(document).ready(function () {
             initTab();
             changeTabEvent();
             setUpDropzone();
+            setUpDropzoneRevision();
             // var stepper = new Stepper($('.bs-stepper')[0], {
             //     linear: false
             // });

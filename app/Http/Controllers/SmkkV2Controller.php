@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Helper\CustomController;
 use App\Models\Package;
 use App\Models\ScoreSMKKV2;
+use App\Models\ScoreSmkkv2Revision;
 use App\Models\Stage;
 use App\Models\StorehouseImage;
 use Illuminate\Database\Eloquent\Builder;
@@ -180,6 +181,56 @@ class SmkkV2Controller extends CustomController
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json('internal server error', 500);
+        }
+    }
+
+    public function uploadRevision($id)
+    {
+        $score_id = $this->request->request->get('id-score');
+        try {
+            DB::beginTransaction();
+            $currentScore = ScoreSMKKV2::with([])->where('id', '=', $score_id)
+                ->first();
+            if ($this->request->hasFile('file')) {
+                $file = $this->request->file('file');
+                $extension = $file->getClientOriginalExtension();
+                $document = Uuid::uuid4()->toString() . '.' . $extension;
+                $storage_path = public_path('files_smkk_revision');
+                $documentName = $storage_path . '/' . $document;
+                $packageID = $currentScore->package_id;
+                $subStageIndicatorID = $currentScore->stage_sub_indicator_id;
+                $fileName = 'Revisi_1';
+                $lastRevision = ScoreSmkkv2Revision::with([])
+                    ->where('score_smkkv2_id', '=', $currentScore->id)
+                    ->orderBy('created_at', 'DESC')
+                    ->first();
+                if ($lastRevision) {
+                    $tmpFileName = explode('_', $lastRevision->name);
+                    $tmpIdx = (int)$tmpFileName[1];
+                    $fileName = 'Revision_' . ($tmpIdx + 1);
+                }
+                $dataRevision = [
+                    'score_smkkv2_id' => $currentScore->id,
+                    'package_id' => $packageID,
+                    'stage_sub_indicator_id' => $subStageIndicatorID,
+                    'name' => $fileName,
+                    'file' => '/files_smkk_revision/' . $document
+                ];
+                $currentScore->update([
+                    'score' => null,
+                    'score_text' => ''
+                ]);
+                ScoreSmkkv2Revision::create($dataRevision);
+                $file->move($storage_path, $documentName);
+                DB::commit();
+                return response()->json('success', 200);
+            } else {
+                DB::rollBack();
+                return response()->json('no file attached', 403);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json('internal server error ' . $e->getMessage(), 500);
         }
     }
 
