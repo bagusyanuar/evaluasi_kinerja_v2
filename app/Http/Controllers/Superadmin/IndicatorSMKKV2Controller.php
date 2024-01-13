@@ -49,7 +49,7 @@ class IndicatorSMKKV2Controller extends Controller
                 $data_request = [
                     'stage_id' => $stage->id,
                     'name' => request()->request->get('name'),
-                    'index' => 1
+                    'index' => 1,
                 ];
                 SubStage::create($data_request);
                 return redirect()->back()->with('success', 'Berhasil Menambahkan Data Sub Tahapan....');
@@ -165,6 +165,27 @@ class IndicatorSMKKV2Controller extends Controller
             }
             return response()->json([
                 'data' => $sub_stage,
+                'message' => 'success'
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json('internal server error', 500);
+        }
+    }
+
+    public function set_sub_stage_role($id)
+    {
+        try {
+            $sub_stage = SubStage::with([])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$sub_stage) {
+                return response()->json('data not found', 404);
+            }
+            $roles = request()->request->get('roles');
+            $sub_stage->update([
+                'roles' => $roles
+            ]);
+            return response()->json([
                 'message' => 'success'
             ], 200);
         }catch (\Exception $e) {

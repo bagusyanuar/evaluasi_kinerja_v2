@@ -308,14 +308,30 @@
                         @csrf
                         <input type="hidden" name="sub-stage-id-role" value="" id="sub-stage-id-role">
                         <div class="form-group w-100 mb-3">
-                            <label for="role" class="form-label">Role Akses</label>
-                            <select class="select2 form-control" name="role" id="role"
-                                    style="width: 100%;" multiple>
-                                <option value="accessorppk">Assessor PPK</option>
-                                <option value="accessor">Assessor</option>
-                                <option value="accessortahapan">Assessor Tahapan</option>
-                            </select>
+                            <label for="role" class="form-label d-block">Role Akses</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox"
+                                       id="role-accessor-ppk"
+                                       name="roles" value="accessorppk">
+                                <label class="form-check-label menu-title"
+                                       for="role-accessor-ppk">Asesor PPK</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox"
+                                       id="role-accessor-stage"
+                                       name="roles" value="accessorperancangan">
+                                <label class="form-check-label menu-title"
+                                       for="role-accessor-stage">Asesor Perancangan</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox"
+                                       id="role-accessor-stage"
+                                       name="roles" value="accessorpengawasan">
+                                <label class="form-check-label menu-title"
+                                       for="role-accessor-stage">Asesor Pengawasan</label>
+                            </div>
                         </div>
+                        <hr>
                         <a href="#" class="bt-primary" id="btn-patch-sub-stage-role">Simpan</a>
                     </form>
                 </div>
@@ -483,6 +499,27 @@
             })
         }
 
+        function eventPatchRoleSubStage() {
+            $('#btn-patch-sub-stage-role').on('click', function (e) {
+                e.preventDefault();
+                let id = $('#sub-stage-id-role').val();
+                Swal.fire({
+                    title: "Konfirmasi!",
+                    text: "Apakah anda yakin merubah data?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        patchSubStageRoleHandler(id);
+                    }
+                });
+            })
+        }
+
         function eventPatchSubIndicator() {
             $('#btn-patch-sub-indicator').on('click', function (e) {
                 e.preventDefault();
@@ -598,6 +635,39 @@
                 await $.post(url, {
                     _token: '{{csrf_token()}}',
                     name: $('#name-sub-stage-edit').val()
+                });
+                blockLoading(false);
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Merubah Data...',
+                    icon: 'success',
+                    timer: 700
+                }).then((response) => {
+                    window.location.reload();
+                })
+            } catch (e) {
+                blockLoading(false);
+                console.log(e);
+                Swal.fire({
+                    title: 'Error',
+                    text: e.responseJSON,
+                    icon: 'error',
+                    timer: 700
+                })
+            }
+        }
+
+        async function patchSubStageRoleHandler(id) {
+            let url = mainPath + '/sub-stage/' + id + '/role';
+            let tmpValRole = [];
+            $('input[name=roles]:checked').each(function () {
+                tmpValRole.push($(this).val())
+            });
+            try {
+                blockLoading(true);
+                await $.post(url, {
+                    _token: '{{csrf_token()}}',
+                    roles: tmpValRole
                 });
                 blockLoading(false);
                 Swal.fire({
@@ -838,6 +908,7 @@
                 });
             });
             generateTableStage();
+            eventPatchRoleSubStage();
             eventEditSubStage();
             eventPatchSubStage();
             eventDeleteSubStage();

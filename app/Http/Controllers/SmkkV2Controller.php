@@ -76,7 +76,7 @@ class SmkkV2Controller extends CustomController
             }
             try {
                 $sub_stages = $stage->sub_stages;
-                $scores = ScoreSMKKV2::with(['revisions'])
+                $scores = ScoreSMKKV2::with(['revisions', 'stage_sub_indicator.indicator'])
                     ->where('package_id', '=', $id)
                     ->get();
                 return response()->json([
@@ -234,13 +234,13 @@ class SmkkV2Controller extends CustomController
         }
     }
 
-    public function setDescription($id, $stage_id)
+    public function setDescription($id)
     {
         if ($this->request->ajax() && $this->request->method() === 'POST') {
             try {
-                $sub_indicator_id = $this->request->request->get('sub_indicator_id_description');
+                $scoreID = $this->request->request->get('score_id');
                 $currentScore = ScoreSMKKV2::with([])->where('package_id', '=', $id)
-                    ->where('stage_sub_indicator_id', '=', $sub_indicator_id)
+                    ->where('id', '=', $scoreID)
                     ->first();
 
                 if (!$currentScore) {
@@ -258,15 +258,15 @@ class SmkkV2Controller extends CustomController
                 return response()->json('internal server error', 500);
             }
         }
-        return $this->getDescription($id, $stage_id);
+        return $this->getDescription($id);
     }
 
-    private function getDescription($id, $stage_id)
+    private function getDescription($id)
     {
         try {
-            $sub_indicator_id = $this->request->query->get('sub-indicator-id-description');
+            $scoreID = $this->request->query->get('score_id');
             $currentScore = ScoreSMKKV2::with([])->where('package_id', '=', $id)
-                ->where('stage_sub_indicator_id', '=', $sub_indicator_id)
+                ->where('id', '=', $scoreID)
                 ->first();
             return response()->json([
                 'message' => 'success',

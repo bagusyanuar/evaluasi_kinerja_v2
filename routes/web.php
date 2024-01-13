@@ -108,6 +108,7 @@ Route::prefix('/')->middleware('auth')->group(
                 Route::post('/indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'add_indicator'])->name('indicator.smkk.v2.indicator');
                 Route::post('/sub-indicators', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'sub_indicator'])->name('indicator.smkk.v2.sub-indicator');
                 Route::match(['post', 'get'],'/sub-stage/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_sub_stage'])->name('indicator.smkk.v2.sub-stage.detail');
+                Route::post('/sub-stage/{id}/role', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'set_sub_stage_role'])->name('indicator.smkk.v2.sub-stage.role');
                 Route::match(['post', 'get'],'/indicators/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_indicator'])->name('indicator.smkk.v2.indicator.detail');
                 Route::match(['post', 'get'],'/sub-indicators/{id}', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'get_sub_indicator'])->name('indicator.smkk.v2.sub-indicator.detail');
                 Route::post('/sub-stage/{id}/delete', [\App\Http\Controllers\Superadmin\IndicatorSMKKV2Controller::class, 'destroy_sub_stage'])->name('indicator.smkk.v2.sub-stage.destroy');
@@ -315,7 +316,7 @@ Route::prefix('/')->middleware('auth')->group(
             Route::match(['post', 'get'],'/{id}/score/{stage_id}', [\App\Http\Controllers\SmkkV2Controller::class, 'score_page'])->name('score.smkk-v2.score');
             Route::post('/{id}/file', [\App\Http\Controllers\SmkkV2Controller::class, 'uploadScoreFile'])->name('score.smkk-v2.score.file');
             Route::post('/{id}/revision', [\App\Http\Controllers\SmkkV2Controller::class, 'uploadRevision'])->name('score.smkk-v2.score.file');
-            Route::match(['post', 'get'],'/{id}/score/{stage_id}/description', [\App\Http\Controllers\SmkkV2Controller::class, 'setDescription'])->name('score.smkk-v2.score.description');
+            Route::match(['post', 'get'],'/{id}/description', [\App\Http\Controllers\SmkkV2Controller::class, 'setDescription'])->name('score.smkk-v2.score.description');
         });
 
 

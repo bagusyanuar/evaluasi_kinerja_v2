@@ -272,7 +272,7 @@
                 <div class="modal-body">
                     <form method="post" id="form-description">
                         @csrf
-                        <input type="hidden" id="sub-indicator-id-description" name="sub-indicator-id-description">
+                        <input type="hidden" id="score-id-description" name="score-id-description">
                         <div class="row mb-3">
                             <div class="col-6">
                                 <div class="mb-0">
@@ -377,6 +377,7 @@
                 setEventUpload();
                 setEventUploadRevision();
                 setEventDownload();
+                setEventDescription();
                 console.log(response);
             } catch (e) {
                 console.log(e)
@@ -410,6 +411,8 @@
         //step 3
         function generateTableSubIndicator(data = [], scores = []) {
             let tableBody = '';
+            let summaryScore = 0;
+            let countScored = 0;
             $.each(data, function (k, v) {
                 //TODO set default action
                 let elFile = '-';
@@ -422,7 +425,7 @@
                     '</div>' +
                     '</div>';
 
-                let elDescription = '<button type="button" class="bt-primary-xsm btn-description" data-sub="' + v['id'] + '">Lihat</button>';
+                let elDescription = '<button type="button" class="bt-primary-xsm" data-sub="' + v['id'] + '">Lihat</button>';
 
                 if (uRoles === 'accessorppk') {
                     elAction = '<div class="dropdown">' +
@@ -434,8 +437,17 @@
                 }
                 //TODO matching sub indicator with score
                 let score = scores.find((o) => o['stage_sub_indicator_id'] === v['id']);
-                console.log(score);
                 if (score !== undefined) {
+                    if (score['score'] !== null) {
+                        countScored += 1;
+                    }
+
+                    if (score['score'] === 1) {
+                        summaryScore += 1;
+                    }
+
+
+                    elDescription = '<button type="button" class="bt-primary-xsm btn-description" data-score="' + score['id'] + '">Lihat</button>';
                     if (score['file'] !== null) {
                         // if (uRoles === 'accessor') {
                         elFile = '<div class="dropdown">' +
@@ -450,7 +462,7 @@
                         if (score['revisions'].length > 0) {
                             let elRev = '';
                             $.each(score['revisions'], function (kRev, vRev) {
-                                elRev += '<button class="dropdown-item btn-download" data-asset="' + vRev['file'] + '">'+vRev['name']+'</button>'
+                                elRev += '<button class="dropdown-item btn-download" data-asset="' + vRev['file'] + '">' + vRev['name'] + '</button>'
                             });
                             elFile = '<div class="dropdown">' +
                                 '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unduh</button>' +
@@ -513,6 +525,7 @@
                     }
 
                 }
+
                 tableBody += '<tr>' +
                     '<td class="text-center">' + (k + 1) + '</td>' +
                     '<td>' + v['name'] + '</td>' +
@@ -523,6 +536,11 @@
                     '</tr>';
             });
 
+
+            let totalScore = 0;
+            if (countScored > 0) {
+                totalScore = (summaryScore / countScored).toFixed(2);
+            }
             return '<table class="display table table-striped w-100 mb-3">' +
                 '<thead>' +
                 '<tr>' +
@@ -538,7 +556,7 @@
                 '<tfoot>' +
                 '<tr>' +
                 '<th colspan="5">Jumlah</th>' +
-                '<th class="text-center middle-header">1</th>' +
+                '<th class="text-center middle-header">' + totalScore + '</th>' +
                 '</tr>' +
                 '</tfoot>' +
                 '</table>'
@@ -627,6 +645,91 @@
                     icon: 'error',
                     timer: 700
                 });
+                console.log(e)
+            }
+        }
+
+        async function getDataDescription(scoreID) {
+            try {
+                let url = path + '/description?score_id=' + scoreID;
+                let response = await $.get(url);
+                let data = response['data'];
+                if (data !== null) {
+                    $('#balai-description').val(data['note_balai']);
+                    $('#ppk-description').val(data['note_ppk']);
+                } else {
+                    $('#balai-description').val('');
+                    $('#ppk-description').val('');
+                }
+
+                $('#score-id-description').val(scoreID);
+                console.log(response);
+                $('#modal-description').modal('show');
+            } catch (e) {
+                Swal.fire({
+                    title: 'Ooops',
+                    text: 'Terjadi Kesalahan Saat Mendapatkan Data Keterangan...',
+                    icon: 'error',
+                    timer: 700
+                })
+            }
+        }
+
+        function setEventDescription() {
+            $('.btn-description').on('click', function (e) {
+                e.preventDefault();
+                let scoreID = this.dataset.score;
+                $('#score-id-description').val(scoreID);
+                getDataDescription(scoreID);
+            })
+        }
+
+        function setEventSaveDescription() {
+            $('#btn-save-description').on('click', function (e) {
+                e.preventDefault();
+                setDescriptionHandler();
+            })
+        }
+
+        async function setDescriptionHandler() {
+            try {
+                let url = path + '/description';
+                blockLoading(true);
+                let response = await $.post(url, {
+                    _token: '{{csrf_token()}}',
+                    score_id: $('#score-id-description').val(),
+                    ppk_description: $('#ppk-description').val(),
+                    balai_description: $('#balai-description').val(),
+                });
+                $('#modal-description').modal('hide');
+                blockLoading(false);
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Merubah Nilai...',
+                    icon: 'success',
+                    timer: 700
+                });
+                let activeTab = $('.my-custom-nav .nav-link.active')[0];
+                let id = activeTab.dataset.id;
+                await getSubStageHandler(id);
+                console.log(response);
+            } catch (e) {
+                blockLoading(false);
+                if (e.status === 404) {
+                    Swal.fire({
+                        title: 'Ooops',
+                        text: 'Nilai Belum Tersedia...',
+                        icon: 'error',
+                        timer: 700
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Ooops',
+                        text: 'Gagal Merubah Nilai...',
+                        icon: 'error',
+                        timer: 700
+                    });
+                }
                 console.log(e)
             }
         }
@@ -822,6 +925,7 @@
             changeTabEvent();
             setUpDropzone();
             setUpDropzoneRevision();
+            setEventSaveDescription();
             // var stepper = new Stepper($('.bs-stepper')[0], {
             //     linear: false
             // });
