@@ -225,6 +225,17 @@
                         </button>
                     </li>
                 @endforeach
+                <li class="nav-item" role="presentation">
+                    <button data-id="summary-tab"
+                            class="trigger-tab nav-link d-flex align-items-center"
+                            id="pills-summary-tab"
+                            data-bs-toggle="pill"
+                            data-bs-target="#pills-content" type="button" role="tab"
+                            aria-controls="pills-content"
+                            aria-selected="true">
+                        Rekapitulasi
+                    </button>
+                </li>
             </ul>
             <hr>
             <div class="tab-content">
@@ -738,8 +749,82 @@
             $("#pills-tab").on("shown.bs.tab", function (e) {
                 let id = e.target.dataset.id;
                 console.log(e.target.dataset.id);
-                getSubStageHandler(id)
+                if (id !== 'summary-tab') {
+                    getSubStageHandler(id)
+                } else {
+                    getSummary();
+                }
+
             })
+        }
+
+        async function getSummary() {
+            let el = $('#pills-content');
+            el.empty();
+            el.append(createLoadingGetScore());
+            try {
+                let response = await $.get(path);
+                el.empty();
+                el.append(createElementSummary(response));
+                console.log(response)
+            } catch (e) {
+                alert('terjadi kesalahan server')
+            }
+        }
+
+        function createElementSummary(data = []) {
+            let result = '';
+            $.each(data, function (k, v) {
+                let subStageElement = createElementSummarySubStage(v['sub_stages']);
+                result += '<p class="title-table fw-bold t-primary mb-0">' + v['name'] + '</p><hr>' +
+                    subStageElement
+            });
+            return result;
+        }
+
+        function createElementSummarySubStage(data = []) {
+            let result = '';
+            $.each(data, function (k, v) {
+                let indicatorElement = createElementSummaryIndicator(v['indicators']);
+                result += '<p class="mb-0">' + (k + 1) + '. ' + v['name'] + '</p>' + indicatorElement;
+            });
+            return result + '<hr>';
+        }
+
+        function createElementSummaryIndicator(data = []) {
+            let tableBody = '';
+            $.each(data, function (k, v) {
+                let subIndicators = v['sub_indicators'];
+                let countedScore = 0;
+                let totalScore = 0;
+                let avgScore = 0;
+                let filteredHasScore = subIndicators.filter((o) => o['score'] !== null);
+                $.each(filteredHasScore, function (k, v) {
+                    if (v['score']['score'] === 1) {
+                        totalScore += 1;
+                    }
+                });
+                countedScore = filteredHasScore.length;
+
+                if (countedScore > 0) {
+                    avgScore = (totalScore / countedScore).toFixed(2)
+                }
+                tableBody += '<tr>' +
+                    '<td class="text-center">' + (k + 1) + '</td>' +
+                    '<td>' + v['name'] + '</td>' +
+                    '<td class="text-center">' + avgScore + '</td>' +
+                    '</tr>';
+            });
+            return '<table class="display table w-100 mb-3">' +
+                '<thead>' +
+                '<tr>' +
+                '<th class="text-center middle-header" width="5%">#</th>' +
+                '<th class="middle-header">Nama</th>' +
+                '<th class="text-center middle-header" width="10%">Total</th>' +
+                '</tr>' +
+                '</thead>' +
+                '<tbody>' + tableBody + '</tbody>' +
+                '</table>'
         }
 
         function setUpDropzone() {

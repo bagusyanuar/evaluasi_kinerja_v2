@@ -58,7 +58,10 @@ class SmkkV2Controller extends CustomController
             return $this->setScore($id);
         }
         $data = Package::with(['vendor.vendor', 'ppk'])->where('id', $id)->firstOrFail();
-        $stages = Stage::with([])->get();
+        $stages = Stage::with(['sub_stages.indicators.sub_indicators.score'])->get();
+        if ($this->request->ajax()) {
+            return response()->json($stages, 200);
+        }
         return view('superuser.penilaian.smkk-v2.package')->with([
             'data' => $data,
             'stages' => $stages
