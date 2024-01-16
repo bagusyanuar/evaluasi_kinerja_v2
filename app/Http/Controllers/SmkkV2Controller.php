@@ -240,14 +240,37 @@ class SmkkV2Controller extends CustomController
     public function destroyRevision($id)
     {
         $score_id = $this->request->request->get('score');
+        $type = $this->request->request->get('type');
+        DB::beginTransaction();
         try {
-            $currentRevision = ScoreSmkkv2Revision::with([])
-                ->where('score_smkkv2_id', '=', $score_id)
-                ->orderBy('id', 'DESC')
-                ->first();
-            $currentRevision->delete();
+            if ($type === 'main') {
+                $currentScore = ScoreSMKKV2::with([])
+                    ->where('id', '=', $score_id)
+                    ->first();
+                if ($currentScore) {
+                    $currentScore->update([
+                        'file' => null,
+                        'score' => null,
+                        'score_text' => '',
+                    ]);
+                }
+            } else {
+                $currentRevision = ScoreSmkkv2Revision::with(['score'])
+                    ->where('score_smkkv2_id', '=', $score_id)
+                    ->orderBy('id', 'DESC')
+                    ->first();
+                if ($currentRevision) {
+                    $currentRevision->delete();
+                    $currentRevision->score->update([
+                        'score' => null,
+                        'score_text' => '',
+                    ]);
+                }
+            }
+            DB::commit();
             return response()->json('success', 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json('internal server error ' . $e->getMessage(), 500);
         }
     }

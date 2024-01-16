@@ -486,12 +486,15 @@
                         // }
 
                         if (uRoles === 'accessorppk') {
-                            elAction = '<div class="dropdown">' +
+                            elAction = '<div class="d-flex align-items-center justify-content-center">' +
+                                '<div class="dropdown me-1">' +
                                 '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Revisi</button>' +
                                 '<div class="dropdown-menu">' +
                                 // '<button class="dropdown-item btn-upload" data-sub="' + v['id'] + '">Ganti</button>' +
                                 '<button class="dropdown-item btn-revision" data-score="' + score['id'] + '">Tambah Revisi</button>' +
                                 '</div>' +
+                                '</div>' +
+                                '<a href="#" class="bt-danger-xsm btn-drop-file-revision" data-type="main" data-score="' + score['id'] + '">Hapus File Terakhir</a>' +
                                 '</div>';
                             //check if has revision
                             if (score['revisions'].length > 0) {
@@ -502,7 +505,7 @@
                                     '<button class="dropdown-item btn-revision" data-score="' + score['id'] + '">Tambah Revisi</button>' +
                                     '</div>' +
                                     '</div>' +
-                                    '<a href="#" class="bt-danger-xsm btn-drop-file-revision" data-score="' + score['id'] + '">Hapus Revisi</a>' +
+                                    '<a href="#" class="bt-danger-xsm btn-drop-file-revision" data-type="revision" data-score="' + score['id'] + '">Hapus File Terakhir</a>' +
                                     '</div>'
                             }
                         }
@@ -635,6 +638,8 @@
             $('.btn-drop-file-revision').on('click', function (e) {
                 e.preventDefault();
                 let score = this.dataset.score;
+                let type = this.dataset.type;
+                console.log(type);
                 Swal.fire({
                     title: "Konfirmasi!",
                     text: "Apakah anda yakin ingin menghapus revisi terakhir?",
@@ -646,13 +651,13 @@
                     cancelButtonText: 'Batal',
                 }).then((result) => {
                     if (result.value) {
-                        setDestroyRevision(score);
+                        setDestroyRevision(score, type);
                     }
                 })
             })
         }
 
-        async function setDestroyRevision(scoreID) {
+        async function setDestroyRevision(scoreID, type) {
             let el = $('#pills-content');
             el.empty();
             try {
@@ -661,6 +666,7 @@
                 let response = await $.post(url, {
                     _token: '{{csrf_token()}}',
                     score: scoreID,
+                    type: type,
                 });
                 el.empty();
                 Swal.fire({
