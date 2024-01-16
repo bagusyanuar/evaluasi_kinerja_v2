@@ -389,6 +389,7 @@
                 setEventUploadRevision();
                 setEventDownload();
                 setEventDescription();
+                setDeleteRevision();
                 console.log(response);
             } catch (e) {
                 console.log(e)
@@ -494,11 +495,14 @@
                                 '</div>';
                             //check if has revision
                             if (score['revisions'].length > 0) {
-                                elAction = '<div class="dropdown">' +
+                                elAction = '<div class="d-flex align-items-center justify-content-center">' +
+                                    '<div class="dropdown me-1">' +
                                     '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Revisi</button>' +
                                     '<div class="dropdown-menu">' +
                                     '<button class="dropdown-item btn-revision" data-score="' + score['id'] + '">Tambah Revisi</button>' +
                                     '</div>' +
+                                    '</div>' +
+                                    '<a href="#" class="bt-danger-xsm btn-drop-file-revision" data-score="' + score['id'] + '">Hapus Revisi</a>' +
                                     '</div>'
                             }
                         }
@@ -560,7 +564,7 @@
                 '<th class="text-center middle-header" width="10%">File</th>' +
                 '<th class="text-center middle-header" width="10%">Nilai</th>' +
                 '<th class="text-center middle-header" width="10%">Keterangan</th>' +
-                '<th class="text-center middle-header" width="10%">Aksi</th>' +
+                '<th class="text-center middle-header" width="15%">Aksi</th>' +
                 '</tr>' +
                 '</thead>' +
                 '<tbody>' + tableBody + '</tbody>' +
@@ -625,6 +629,58 @@
                 $('#id-score').val(scoreID);
                 $('#modal-revision').modal('show');
             })
+        }
+
+        function setDeleteRevision() {
+            $('.btn-drop-file-revision').on('click', function (e) {
+                e.preventDefault();
+                let score = this.dataset.score;
+                Swal.fire({
+                    title: "Konfirmasi!",
+                    text: "Apakah anda yakin ingin menghapus revisi terakhir?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal',
+                }).then((result) => {
+                    if (result.value) {
+                        setDestroyRevision(score);
+                    }
+                })
+            })
+        }
+
+        async function setDestroyRevision(scoreID) {
+            let el = $('#pills-content');
+            el.empty();
+            try {
+                let url = path + '/revision/delete';
+                el.append(createLoadingSetScore());
+                let response = await $.post(url, {
+                    _token: '{{csrf_token()}}',
+                    score: scoreID,
+                });
+                el.empty();
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Berhasil Menghapus File Revisi...',
+                    icon: 'success',
+                    timer: 700
+                });
+                let activeTab = $('.my-custom-nav .nav-link.active')[0];
+                let id = activeTab.dataset.id;
+                await getSubStageHandler(id);
+            } catch (e) {
+                el.empty();
+                Swal.fire({
+                    title: 'Ooops',
+                    text: 'Gagal Menghapus File Revisi...',
+                    icon: 'error',
+                    timer: 700
+                });
+            }
         }
 
         async function setScoreHandler(subIndicatorID, score) {

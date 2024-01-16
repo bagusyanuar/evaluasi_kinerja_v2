@@ -237,6 +237,21 @@ class SmkkV2Controller extends CustomController
         }
     }
 
+    public function destroyRevision($id)
+    {
+        $score_id = $this->request->request->get('score');
+        try {
+            $currentRevision = ScoreSmkkv2Revision::with([])
+                ->where('score_smkkv2_id', '=', $score_id)
+                ->orderBy('id', 'DESC')
+                ->first();
+            $currentRevision->delete();
+            return response()->json('success', 200);
+        } catch (\Exception $e) {
+            return response()->json('internal server error ' . $e->getMessage(), 500);
+        }
+    }
+
     public function setDescription($id)
     {
         if ($this->request->ajax() && $this->request->method() === 'POST') {

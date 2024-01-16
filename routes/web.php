@@ -315,7 +315,8 @@ Route::prefix('/')->middleware('auth')->group(
             Route::match(['post', 'get'],'/{id}', [\App\Http\Controllers\SmkkV2Controller::class, 'package_page'])->name('score.smkk-v2.package');
             Route::match(['post', 'get'],'/{id}/score/{stage_id}', [\App\Http\Controllers\SmkkV2Controller::class, 'score_page'])->name('score.smkk-v2.score');
             Route::post('/{id}/file', [\App\Http\Controllers\SmkkV2Controller::class, 'uploadScoreFile'])->name('score.smkk-v2.score.file');
-            Route::post('/{id}/revision', [\App\Http\Controllers\SmkkV2Controller::class, 'uploadRevision'])->name('score.smkk-v2.score.file');
+            Route::post('/{id}/revision', [\App\Http\Controllers\SmkkV2Controller::class, 'uploadRevision'])->name('score.smkk-v2.score.revision');
+            Route::post('/{id}/revision/delete', [\App\Http\Controllers\SmkkV2Controller::class, 'destroyRevision'])->name('score.smkk-v2.score.revision.delete');
             Route::match(['post', 'get'],'/{id}/description', [\App\Http\Controllers\SmkkV2Controller::class, 'setDescription'])->name('score.smkk-v2.score.description');
         });
 

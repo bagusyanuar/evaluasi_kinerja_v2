@@ -319,9 +319,9 @@
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox"
                                        id="role-accessor-stage"
-                                       name="roles" value="accessorperancangan">
+                                       name="roles" value="accessorperencanaan">
                                 <label class="form-check-label menu-title"
-                                       for="role-accessor-stage">Asesor Perancangan</label>
+                                       for="role-accessor-stage">Asesor Perencanaan</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="checkbox"

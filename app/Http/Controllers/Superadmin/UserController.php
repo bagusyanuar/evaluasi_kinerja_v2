@@ -20,7 +20,7 @@ class UserController extends CustomController
     {
         $data = User::with("$role")->whereJsonContains('roles', $role);
 
-        if ($role == 'accessorppk'){
+        if ($role == 'accessorppk') {
             $data = User::with("accessorppk.ppk")->whereJsonContains('roles', $role);
         }
 
@@ -38,7 +38,7 @@ class UserController extends CustomController
 
     public function store()
     {
-        $field         = \request()->validate(
+        $field = \request()->validate(
             [
                 'name' => 'required',
             ]
@@ -49,10 +49,10 @@ class UserController extends CustomController
             ]
         );
 
-        if (\request('id')){
+        if (\request('id')) {
             $fieldUserEdit = \request()->validate(
                 [
-                    'email'    => 'required|string',
+                    'email' => 'required|string',
                     'username' => 'required|string',
                 ]
             );
@@ -65,7 +65,7 @@ class UserController extends CustomController
                 );
             }
 
-            $cekUsername   = User::where([['username', '=', \request('username')], ['id', '!=', \request('id')]])->first();
+            $cekUsername = User::where([['username', '=', \request('username')], ['id', '!=', \request('id')]])->first();
             if ($cekUsername) {
                 return \request()->validate(
                     [
@@ -75,36 +75,35 @@ class UserController extends CustomController
             }
 
 
-        }else{
+        } else {
             \request()->validate(
                 [
-                    'email'    => 'required|string|unique:users,email',
+                    'email' => 'required|string|unique:users,email',
                     'username' => 'required|string|unique:users,username',
                 ]
             );
         }
-        $roles         = \request('roles');
+        $roles = \request('roles');
         Arr::set($field, 'roles', ["$roles"]);
         $files = \request()->file('profile');
         DB::beginTransaction();
         try {
             if (\request('id')) {
-
                 Arr::set($field, 'username', $fieldUserEdit['username']);
                 Arr::set($field, 'email', $fieldUserEdit['email']);
 
 
                 $user = User::find(\request('id'));
-                if ($files){
-                    if ($user->image){
+                if ($files) {
+                    if ($user->image) {
                         if (file_exists('../public' . $user->image)) {
                             unlink('../public' . $user->image);
                         }
                     }
                     $extension = $files->getClientOriginalExtension();
-                    $name = $this->uuidGenerator().'.'.$extension;
-                    $stringImg = '/images/profile/'.$name;
-                    $this->uploadImage('profile',$name,'imagesProfile');
+                    $name = $this->uuidGenerator() . '.' . $extension;
+                    $stringImg = '/images/profile/' . $name;
+                    $this->uploadImage('profile', $name, 'imagesProfile');
                     $user->update(['image' => $stringImg]);
                 }
                 if (strpos($fieldPassword['password'], '*') === false) {
@@ -112,11 +111,13 @@ class UserController extends CustomController
                     Arr::set($field, 'password', $password);
                 }
                 $user->update($field);
+
+
                 $user->$roles()->update(['name' => $field['name']]);
-                if (\request('roles') == 'accessorppk'){
+                if (\request('roles') == 'accessorppk') {
                     $user->$roles()->update(['ppk_id' => \request('selectPPK')]);
                 }
-                if (\request('roles') == 'vendor'){
+                if (\request('roles') == 'vendor') {
                     $user->$roles()->update([
                         'kualifikasi' => \request('kualifikasi'),
                         'phone' => \request('phone'),
@@ -125,24 +126,25 @@ class UserController extends CustomController
                         'address' => \request('address'),
                     ]);
                 }
+
             } else {
 
                 Arr::set($field, 'username', \request('username'));
                 Arr::set($field, 'email', \request('email'));
                 $password = Hash::make($fieldPassword['password']);
                 Arr::set($field, 'password', $password);
-                if ($files){
+                if ($files) {
                     $extension = $files->getClientOriginalExtension();
-                    $name = $this->uuidGenerator().'.'.$extension;
-                    $stringImg = '/images/profile/'.$name;
-                    $this->uploadImage('profile',$name,'imagesProfile');
-                    Arr::set($field,'image',$stringImg);
+                    $name = $this->uuidGenerator() . '.' . $extension;
+                    $stringImg = '/images/profile/' . $name;
+                    $this->uploadImage('profile', $name, 'imagesProfile');
+                    Arr::set($field, 'image', $stringImg);
                 }
                 $user = User::create($field);
-                if (\request('roles') == 'accessorppk'){
+                if (\request('roles') == 'accessorppk') {
                     Arr::set($field, 'ppk_id', \request('selectPPK'));
                 }
-                if (\request('roles') == 'vendor'){
+                if (\request('roles') == 'vendor') {
                     Arr::set($field, 'kualifikasi', \request('kualifikasi'));
                     Arr::set($field, 'phone', \request('phone'));
                     Arr::set($field, 'npwp', \request('npwp'));
@@ -150,38 +152,39 @@ class UserController extends CustomController
                     Arr::set($field, 'address', \request('address'));
                 }
                 $user->$roles()->create($field);
-
             }
             DB::commit();
 
             return response()->json(['msg' => 'success']);
-        }  catch (\Exception $er) {
+        } catch (\Exception $er) {
             DB::rollBack();
 
             return response()->json(['msg' => $er->getMessage()], 500);
         }
     }
 
-    public function getDetailUser(){
+    public function getDetailUser()
+    {
         $role = \request('role');
         $id = \request('id');
         $data = User::with("$role")->whereJsonContains('roles', $role)->find($id);
 
-        if ($role == 'accessorppk'){
+        if ($role == 'accessorppk') {
             $data = User::with("accessorppk.ppk")->whereJsonContains('roles', $role)->find($id);
         }
 
         return $data;
     }
 
-    public function getCountUser(){
+    public function getCountUser()
+    {
         $user = User::selectRaw('count(*) as count, roles')->groupBy('roles')->get();
         return $user;
     }
 
 
-
-    public function delete($id){
+    public function delete($id)
+    {
         User::destroy($id);
         return response()->json(['msg' => 'success']);
     }

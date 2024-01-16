@@ -55,6 +55,16 @@ class User extends Authenticatable
         return $this->hasOne(AccessorPPK::class, 'user_id');
     }
 
+    public function accessorperencanaan()
+    {
+        return $this->hasOne(AccessorPerencanaan::class, 'user_id');
+    }
+
+    public function accessorpengawasan()
+    {
+        return $this->hasOne(AccessorPengawasan::class, 'user_id');
+    }
+
     public function superuser()
     {
         return $this->hasOne(Superuser::class, 'user_id');

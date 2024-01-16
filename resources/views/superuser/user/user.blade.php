@@ -75,6 +75,8 @@
                             Asesor PPK
                         </div>
                     </a>
+
+
                 @endif
                 <a class="card-tab d-block c-text card-user" id="uvendor" data-roles="vendor"
                    data-text-roles="Penyedia Jasa">
@@ -86,6 +88,31 @@
                         Penyedia Jasa
                     </div>
                 </a>
+
+                @if (auth()->user()->roles[0] == 'superuser')
+                    <a class="card-tab d-block c-text card-user" id="uaccessorperencanaan"
+                       data-roles="accessorperencanaan"
+                       data-text-roles="Asesor Perencanaan">
+                        <div class="d-flex justify-content-between">
+                            <i class='bx bx-user icon-size-lg'></i>
+                            <p class="number-card">0</p>
+                        </div>
+                        <div class="mt-2">
+                            Asesor Perencanaan
+                        </div>
+                    </a>
+                    <a class="card-tab d-block c-text card-user" id="uaccessorpengawasan"
+                       data-roles="accessorpengawasan"
+                       data-text-roles="Asesor Pengawasan">
+                        <div class="d-flex justify-content-between">
+                            <i class='bx bx-user icon-size-lg'></i>
+                            <p class="number-card">0</p>
+                        </div>
+                        <div class="mt-2">
+                            Asesor Pengawasan
+                        </div>
+                    </a>
+                @endif
             </div>
 
 
