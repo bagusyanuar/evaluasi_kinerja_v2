@@ -401,7 +401,9 @@
             let result = '';
             $.each(data, function (k, v) {
                 let indicators = v['indicators'];
-                let indicatorsElement = generateIndicatorsElement(indicators, scores);
+                let roles = v['roles'];
+                let hasSpecialAccess = roles.includes(uRoles);
+                let indicatorsElement = generateIndicatorsElement(indicators, scores, hasSpecialAccess);
                 result += '<p class="title-table fw-bold t-primary mb-0 text-center">' + v['name'] + '</p>' +
                     '<hr>' + indicatorsElement;
             });
@@ -409,11 +411,11 @@
         }
 
         //step 2
-        function generateIndicatorsElement(data = [], scores = []) {
+        function generateIndicatorsElement(data = [], scores = [], hasSpecialAccess = false) {
             let result = '';
             $.each(data, function (k, v) {
                 let subIndicators = v['sub_indicators'];
-                let tableSubIndicator = generateTableSubIndicator(subIndicators, scores);
+                let tableSubIndicator = generateTableSubIndicator(subIndicators, scores, hasSpecialAccess);
                 result += '<p class="title-table fw-bold mb-0">' + (k + 1) + '. ' + v['name'] + '</p>' +
                     '<hr>' + tableSubIndicator;
             });
@@ -421,7 +423,7 @@
         }
 
         //step 3
-        function generateTableSubIndicator(data = [], scores = []) {
+        function generateTableSubIndicator(data = [], scores = [], hasSpecialAccess = false) {
             let tableBody = '';
             let summaryScore = 0;
             let countScored = 0;
@@ -439,7 +441,7 @@
 
                 let elDescription = '<button type="button" class="bt-primary-xsm" data-sub="' + v['id'] + '">Lihat</button>';
 
-                if (uRoles === 'accessorppk') {
+                if (uRoles === 'accessorppk' || hasSpecialAccess) {
                     elAction = '<div class="dropdown">' +
                         '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Unggah</button>' +
                         '<div class="dropdown-menu">' +
@@ -485,7 +487,7 @@
                         }
                         // }
 
-                        if (uRoles === 'accessorppk') {
+                        if (uRoles === 'accessorppk' || hasSpecialAccess) {
                             elAction = '<div class="d-flex align-items-center justify-content-center">' +
                                 '<div class="dropdown me-1">' +
                                 '<button class="bt-primary-xsm btn-file" data-bs-toggle="dropdown" aria-expanded="false" data-sub="' + v['id'] + '">Revisi</button>' +
